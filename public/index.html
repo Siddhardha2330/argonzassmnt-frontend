@@ -8,6 +8,19 @@
 </head>
 <body>
     <div id="root"></div>
+    <script>
+        console.log('🔍 HTML loaded, testing basic JavaScript...');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ DOM Content Loaded');
+            const root = document.getElementById('root');
+            if (root) {
+                console.log('✅ Root element found in HTML');
+                root.innerHTML = '<h1>🔍 Testing - If you see this, HTML is working but React is not loading</h1>';
+            } else {
+                console.error('❌ Root element not found in HTML');
+            }
+        });
+    </script>
 </body>
 </html>
 
