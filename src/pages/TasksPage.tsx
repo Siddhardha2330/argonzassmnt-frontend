@@ -182,7 +182,7 @@ const TasksPage: React.FC = () => {
       description: task.description,
       category: task.category,
       priority: (task as any).priority || 'medium',
-      deadline: task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : ''
+      deadline: task.deadline ? (typeof task.deadline === 'string' ? task.deadline.split('T')[0] : new Date(task.deadline).toISOString().split('T')[0]) : ''
     });
     setShowEditModal(true);
   }
@@ -343,7 +343,7 @@ const TasksPage: React.FC = () => {
 
               <div className="task-deadline">
                 <span className="deadline-icon">⏰</span>
-                <span className="deadline-text">{getDaysLeft(task.deadline.toString())}</span>
+                <span className="deadline-text">{getDaysLeft(task.deadline ? task.deadline.toString() : new Date().toISOString())}</span>
               </div>
 
               <div className="task-assignees">
