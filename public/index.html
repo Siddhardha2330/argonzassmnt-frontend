@@ -16,6 +16,25 @@
             if (root) {
                 console.log('✅ Root element found in HTML');
                 root.innerHTML = '<h1>🔍 Testing - If you see this, HTML is working but React is not loading</h1>';
+                
+                // Test if bundle.js is loading
+                fetch('/bundle.js')
+                    .then(response => {
+                        console.log('📦 Bundle.js response status:', response.status);
+                        console.log('📦 Bundle.js content-type:', response.headers.get('content-type'));
+                        return response.text();
+                    })
+                    .then(text => {
+                        console.log('📦 Bundle.js first 100 chars:', text.substring(0, 100));
+                        if (text.includes('<!DOCTYPE')) {
+                            console.error('❌ Bundle.js is returning HTML instead of JavaScript!');
+                        } else {
+                            console.log('✅ Bundle.js appears to be JavaScript');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('❌ Failed to fetch bundle.js:', err);
+                    });
             } else {
                 console.error('❌ Root element not found in HTML');
             }

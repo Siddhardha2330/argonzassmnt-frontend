@@ -11,7 +11,8 @@ module.exports = (env, argv) => {
       path: path.resolve(__dirname, 'dist'),
       filename: 'bundle.js',
       publicPath: '/',
-      clean: true
+      clean: true,
+      assetModuleFilename: '[name][ext]'
     },
     resolve: {
       extensions: ['.tsx', '.ts', '.js']
