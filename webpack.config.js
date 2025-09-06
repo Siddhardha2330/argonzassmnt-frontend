@@ -32,7 +32,8 @@ module.exports = (env, argv) => {
     plugins: [
       new HtmlWebpackPlugin({
         template: './public/index.html',
-        inject: true
+        inject: true,
+        filename: 'index.html'
       }),
       new webpack.DefinePlugin({
         'process.env.API_BASE_URL': JSON.stringify(process.env.API_BASE_URL || '')
