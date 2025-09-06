@@ -7,7 +7,6 @@ import './styles/App.css';
 
 const App: React.FC = () => {
   return (
-        (
           <div className="App">
             <nav className="navbar">
               <div className="nav-brand">
@@ -45,7 +44,6 @@ const App: React.FC = () => {
               </div>
             </div>
           </div>
-        )
   );
 };
 

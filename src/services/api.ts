@@ -78,11 +78,26 @@ class ApiService {
 
   async updateTaskProgress(taskId: string, progress: number) {
     return this.request(`/api/tasks/${taskId}/progress`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify({ progress }),
+    });
+  }
+
+  async createTask(taskData: any) {
+    return this.request('/api/tasks', {
+      method: 'POST',
+      body: JSON.stringify(taskData),
+    });
+  }
+
+  async createMentor(mentorData: any) {
+    return this.request('/api/mentors', {
+      method: 'POST',
+      body: JSON.stringify(mentorData),
     });
   }
 }
 
 export const apiService = new ApiService();
 export default apiService;
+
