@@ -72,6 +72,9 @@ const MentorsPage: React.FC = () => {
 
   const [newMentor, setNewMentor] = useState({ profession: '', specialization: '', bio: '' });
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingMentor, setEditingMentor] = useState<MentorProfile | null>(null);
+  const [editMentor, setEditMentor] = useState({ profession: '', specialization: '', bio: '' });
   async function createMentor() {
     console.log('👥 Creating mentor with data:', newMentor);
     try {
@@ -125,6 +128,65 @@ const MentorsPage: React.FC = () => {
       console.error('❌ Follow mentor error:', error);
       setError(error instanceof Error ? error.message : 'Failed to follow mentor');
     }
+  }
+
+  async function editMentor() {
+    if (!editingMentor) return;
+    
+    console.log('📝 Editing mentor with data:', editMentor);
+    try {
+      const response = await apiService.updateMentor(editingMentor._id, editMentor);
+      console.log('📝 Edit mentor response:', response);
+      
+      if (response.error) {
+        console.error('❌ Edit mentor failed:', response.error);
+        setError(response.error);
+        return;
+      }
+      
+      console.log('✅ Mentor edited successfully');
+      setEditMentor({ profession: '', specialization: '', bio: '' });
+      setEditingMentor(null);
+      setShowEditModal(false);
+      setError(null);
+      await fetchMentors();
+    } catch (error) {
+      console.error('❌ Edit mentor error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to edit mentor');
+    }
+  }
+
+  async function deleteMentor(mentorId: string) {
+    console.log('🗑️ Deleting mentor:', mentorId);
+    if (!confirm('Are you sure you want to delete this mentor?')) return;
+    
+    try {
+      const response = await apiService.deleteMentor(mentorId);
+      console.log('🗑️ Delete mentor response:', response);
+      
+      if (response.error) {
+        console.error('❌ Delete mentor failed:', response.error);
+        setError(response.error);
+        return;
+      }
+      
+      console.log('✅ Mentor deleted successfully');
+      setError(null);
+      await fetchMentors();
+    } catch (error) {
+      console.error('❌ Delete mentor error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to delete mentor');
+    }
+  }
+
+  function openEditModal(mentor: MentorProfile) {
+    setEditingMentor(mentor);
+    setEditMentor({
+      profession: mentor.profession,
+      specialization: mentor.specialization,
+      bio: mentor.bio
+    });
+    setShowEditModal(true);
   }
 
   return (
@@ -188,6 +250,30 @@ const MentorsPage: React.FC = () => {
         </div>
       )}
 
+      {showEditModal && editingMentor && (
+        <div className="modal-backdrop" onClick={(e) => { if (e.currentTarget === e.target) setShowEditModal(false); }}>
+          <div className="modal-card">
+            <h3>Edit Mentor</h3>
+            <div className="form-field">
+              <label htmlFor="edit-mentor-profession">Profession</label>
+              <input id="edit-mentor-profession" placeholder="Profession" value={editMentor.profession} onChange={e => setEditMentor({ ...editMentor, profession: e.target.value })} />
+            </div>
+            <div className="form-field">
+              <label htmlFor="edit-mentor-spec">Specialization</label>
+              <input id="edit-mentor-spec" placeholder="Specialization" value={editMentor.specialization} onChange={e => setEditMentor({ ...editMentor, specialization: e.target.value })} />
+            </div>
+            <div className="form-field">
+              <label htmlFor="edit-mentor-bio">Bio</label>
+              <input id="edit-mentor-bio" placeholder="Brief bio" value={editMentor.bio} onChange={e => setEditMentor({ ...editMentor, bio: e.target.value })} />
+            </div>
+            <div className="modal-actions">
+              <button className="secondary-btn" onClick={() => setShowEditModal(false)}>Cancel</button>
+              <button className="primary-btn" disabled={!editMentor.profession} onClick={editMentor}>Update</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mentors-grid">
         {sortedMentors.map((mentor) => (
           <div key={mentor._id} className="mentor-card">
@@ -197,7 +283,41 @@ const MentorsPage: React.FC = () => {
                 <h3 className="mentor-name">{mentor.profession}</h3>
                 <p className="mentor-profession">{mentor.specialization}</p>
               </div>
-              <button className="follow-btn" onClick={() => followMentor(mentor._id)}>+ Follow</button>
+              <div className="mentor-actions" style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
+                <button className="follow-btn" onClick={() => followMentor(mentor._id)}>+ Follow</button>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button 
+                    className="edit-btn" 
+                    onClick={() => openEditModal(mentor)}
+                    style={{ 
+                      background: '#3B82F6', 
+                      color: 'white', 
+                      border: 'none', 
+                      padding: '4px 8px', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer',
+                      fontSize: '10px'
+                    }}
+                  >
+                    ✏️
+                  </button>
+                  <button 
+                    className="delete-btn" 
+                    onClick={() => deleteMentor(mentor._id)}
+                    style={{ 
+                      background: '#EF4444', 
+                      color: 'white', 
+                      border: 'none', 
+                      padding: '4px 8px', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer',
+                      fontSize: '10px'
+                    }}
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
             </div>
             <p className="mentor-bio">{mentor.bio}</p>
             <div className="mentor-stats">

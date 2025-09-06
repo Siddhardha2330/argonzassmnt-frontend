@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Task, Category } from '../types';
 import { apiService } from '../services/api';
+import { useDebounce } from '../hooks/useDebounce';
 import '../styles/TasksPage.css';
 
 const TasksPage: React.FC = () => {
@@ -14,7 +15,14 @@ const TasksPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [newTask, setNewTask] = useState({ title: '', description: '', category: '', priority: 'medium', deadline: '' });
+  const [editTask, setEditTask] = useState({ title: '', description: '', category: '', priority: 'medium', deadline: '' });
+  
+  // Debounced progress for slower updates
+  const [progressValue, setProgressValue] = useState<number>(0);
+  const debouncedProgress = useDebounce(progressValue, 1000); // 1 second delay
 
   async function fetchCategories() {
     try {
@@ -53,9 +61,23 @@ const TasksPage: React.FC = () => {
   useEffect(() => {
     fetchTasks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, selectedCategory, sortBy]);
+  }, []);
 
-  const filteredTasks = tasks;
+  // Debounced progress update effect
+  useEffect(() => {
+    if (debouncedProgress > 0) {
+      // This will be called 1 second after the user stops changing progress
+      console.log('🔄 Debounced progress update:', debouncedProgress);
+    }
+  }, [debouncedProgress]);
+
+  // Fix filtering logic
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         task.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || task.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     switch (sortBy) {
@@ -118,6 +140,67 @@ const TasksPage: React.FC = () => {
       console.error('❌ Create task error:', error);
       setError(error instanceof Error ? error.message : 'Failed to create task');
     }
+  }
+
+  async function editTask() {
+    if (!editingTask) return;
+    
+    console.log('📝 Editing task with data:', editTask);
+    try {
+      const response = await apiService.updateTask(editingTask._id, editTask);
+      console.log('📝 Edit task response:', response);
+      
+      if (response.error) {
+        console.error('❌ Edit task failed:', response.error);
+        setError(response.error);
+        return;
+      }
+      
+      console.log('✅ Task edited successfully');
+      setEditTask({ title: '', description: '', category: '', priority: 'medium', deadline: '' });
+      setEditingTask(null);
+      setShowEditModal(false);
+      setError(null);
+      await fetchTasks();
+    } catch (error) {
+      console.error('❌ Edit task error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to edit task');
+    }
+  }
+
+  async function deleteTask(taskId: string) {
+    console.log('🗑️ Deleting task:', taskId);
+    if (!confirm('Are you sure you want to delete this task?')) return;
+    
+    try {
+      const response = await apiService.deleteTask(taskId);
+      console.log('🗑️ Delete task response:', response);
+      
+      if (response.error) {
+        console.error('❌ Delete task failed:', response.error);
+        setError(response.error);
+        return;
+      }
+      
+      console.log('✅ Task deleted successfully');
+      setError(null);
+      await fetchTasks();
+    } catch (error) {
+      console.error('❌ Delete task error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to delete task');
+    }
+  }
+
+  function openEditModal(task: Task) {
+    setEditingTask(task);
+    setEditTask({
+      title: task.title,
+      description: task.description,
+      category: task.category,
+      priority: (task as any).priority || 'medium',
+      deadline: task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : ''
+    });
+    setShowEditModal(true);
   }
 
   return (
@@ -196,6 +279,47 @@ const TasksPage: React.FC = () => {
         </div>
       )}
 
+      {showEditModal && editingTask && (
+        <div className="modal-backdrop" onClick={(e) => { if (e.currentTarget === e.target) setShowEditModal(false); }}>
+          <div className="modal-card">
+            <h3>Edit Task</h3>
+            <div className="form-field">
+              <label htmlFor="edit-task-title">Title</label>
+              <input id="edit-task-title" placeholder="Task title" value={editTask.title} onChange={e => setEditTask({ ...editTask, title: e.target.value })} />
+            </div>
+            <div className="form-field">
+              <label htmlFor="edit-task-desc">Description</label>
+              <input id="edit-task-desc" placeholder="Short description" value={editTask.description} onChange={e => setEditTask({ ...editTask, description: e.target.value })} />
+            </div>
+            <div className="form-row">
+              <div className="form-field">
+                <label htmlFor="edit-task-cat">Category</label>
+                <select id="edit-task-cat" value={editTask.category} onChange={e => setEditTask({ ...editTask, category: e.target.value })}>
+                  <option value="">Select category</option>
+                  {categories.map(c => <option key={(c as any)._id || c.name} value={c.name}>{c.name}</option>)}
+                </select>
+              </div>
+              <div className="form-field">
+                <label htmlFor="edit-task-priority">Priority</label>
+                <select id="edit-task-priority" value={editTask.priority} onChange={e => setEditTask({ ...editTask, priority: e.target.value })}>
+                  <option value="low">low</option>
+                  <option value="medium">medium</option>
+                  <option value="high">high</option>
+                </select>
+              </div>
+            </div>
+            <div className="form-field">
+              <label htmlFor="edit-task-deadline">Deadline</label>
+              <input id="edit-task-deadline" type="date" value={editTask.deadline} onChange={e => setEditTask({ ...editTask, deadline: e.target.value })} />
+            </div>
+            <div className="modal-actions">
+              <button className="secondary-btn" onClick={() => setShowEditModal(false)}>Cancel</button>
+              <button className="primary-btn" disabled={!editTask.title || !editTask.description} onClick={editTask}>Update</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading && <div>Loading tasks...</div>}
       {error && <div className="error-message" style={{ color: 'red', padding: '10px', margin: '10px 0', backgroundColor: '#ffe6e6', border: '1px solid #ff9999', borderRadius: '4px' }}>Error: {error}</div>}
 
@@ -218,7 +342,18 @@ const TasksPage: React.FC = () => {
                   ></div>
                 </div>
                 <span className="progress-percentage">{task.progress || 0}%</span>
-                <input type="range" min={0} max={100} value={task.progress || 0} onChange={(e) => updateProgress((task as any)._id as any, Number(e.target.value))} />
+                <input 
+                  type="range" 
+                  min={0} 
+                  max={100} 
+                  value={task.progress || 0} 
+                  onChange={(e) => {
+                    const newProgress = Number(e.target.value);
+                    setProgressValue(newProgress);
+                    // Update UI immediately for better UX
+                    setTasks(prev => prev.map(t => (t as any)._id === (task as any)._id ? { ...t, progress: newProgress } as Task : t));
+                  }} 
+                />
               </div>
 
               <div className="task-deadline">
@@ -230,6 +365,39 @@ const TasksPage: React.FC = () => {
                 {(task.assigned_to || []).map((userId, index) => (
                   <div key={index} className="assignee-avatar">👤</div>
                 ))}
+              </div>
+
+              <div className="task-actions" style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                <button 
+                  className="edit-btn" 
+                  onClick={() => openEditModal(task)}
+                  style={{ 
+                    background: '#3B82F6', 
+                    color: 'white', 
+                    border: 'none', 
+                    padding: '6px 12px', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                >
+                  ✏️ Edit
+                </button>
+                <button 
+                  className="delete-btn" 
+                  onClick={() => deleteTask((task as any)._id)}
+                  style={{ 
+                    background: '#EF4444', 
+                    color: 'white', 
+                    border: 'none', 
+                    padding: '6px 12px', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                >
+                  🗑️ Delete
+                </button>
               </div>
             </div>
           </div>

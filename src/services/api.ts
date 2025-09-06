@@ -102,6 +102,32 @@ class ApiService {
       body: JSON.stringify(mentorData),
     });
   }
+
+  async updateTask(taskId: string, taskData: any) {
+    return this.request(`/api/tasks/${taskId}`, {
+      method: 'PUT',
+      body: JSON.stringify(taskData),
+    });
+  }
+
+  async deleteTask(taskId: string) {
+    return this.request(`/api/tasks/${taskId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async updateMentor(mentorId: string, mentorData: any) {
+    return this.request(`/api/mentors/${mentorId}`, {
+      method: 'PUT',
+      body: JSON.stringify(mentorData),
+    });
+  }
+
+  async deleteMentor(mentorId: string) {
+    return this.request(`/api/mentors/${mentorId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiService = new ApiService();
