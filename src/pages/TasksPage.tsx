@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Task, Category } from '../types';
 import { apiService } from '../services/api';
-import { useDebounce } from '../hooks/useDebounce';
 import '../styles/TasksPage.css';
 
 const TasksPage: React.FC = () => {
@@ -19,10 +18,6 @@ const TasksPage: React.FC = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [newTask, setNewTask] = useState({ title: '', description: '', category: '', priority: 'medium', deadline: '' });
   const [editTask, setEditTask] = useState({ title: '', description: '', category: '', priority: 'medium', deadline: '' });
-  
-  // Debounced progress for slower updates
-  const [progressValue, setProgressValue] = useState<number>(0);
-  const debouncedProgress = useDebounce(progressValue, 1000); // 1 second delay
 
   async function fetchCategories() {
     try {
@@ -56,33 +51,15 @@ const TasksPage: React.FC = () => {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
-
-  useEffect(() => {
     fetchTasks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Debounced progress update effect
-  useEffect(() => {
-    if (debouncedProgress > 0) {
-      // This will be called 1 second after the user stops changing progress
-      console.log('🔄 Debounced progress update:', debouncedProgress);
-      // Find the task that was being updated and update it via API
-      const taskToUpdate = tasks.find(t => (t as any).progress === debouncedProgress);
-      if (taskToUpdate) {
-        updateProgress((taskToUpdate as any)._id, debouncedProgress);
-      }
-    }
-  }, [debouncedProgress]);
-
-  // Fix filtering logic
+  // Simple filtering logic
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = searchTerm === '' || 
                          task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          task.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || task.category === selectedCategory;
-    console.log('🔍 Filtering task:', task.title, 'Search:', searchTerm, 'Category:', selectedCategory, 'Matches:', matchesSearch && matchesCategory);
     return matchesSearch && matchesCategory;
   });
 
@@ -98,7 +75,7 @@ const TasksPage: React.FC = () => {
     }
   });
 
-  const getDaysLeft = (deadline: Date) => {
+  const getDaysLeft = (deadline: string) => {
     const today = new Date();
     const diffTime = new Date(deadline).getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -218,7 +195,7 @@ const TasksPage: React.FC = () => {
           <div className="search-bar">
             <input
               type="text"
-              placeholder="Search Task"
+              placeholder="Search tasks..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
@@ -270,7 +247,6 @@ const TasksPage: React.FC = () => {
                   <option value="low">low</option>
                   <option value="medium">medium</option>
                   <option value="high">high</option>
-                  <option value="urgent">urgent</option>
                 </select>
               </div>
             </div>
@@ -356,10 +332,11 @@ const TasksPage: React.FC = () => {
                   value={task.progress || 0} 
                   onChange={(e) => {
                     const newProgress = Number(e.target.value);
-                    // Update UI immediately for better UX
                     setTasks(prev => prev.map(t => (t as any)._id === (task as any)._id ? { ...t, progress: newProgress } as Task : t));
-                    // Set progress value for debounced API call
-                    setProgressValue(newProgress);
+                    // Debounced API call
+                    setTimeout(() => {
+                      updateProgress((task as any)._id, newProgress);
+                    }, 1000);
                   }} 
                 />
               </div>
@@ -379,12 +356,31 @@ const TasksPage: React.FC = () => {
                 <button 
                   className="edit-btn" 
                   onClick={() => openEditModal(task)}
+                  style={{ 
+                    background: '#3B82F6', 
+                    color: 'white', 
+                    border: 'none', 
+                    padding: '6px 12px', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    marginRight: '8px'
+                  }}
                 >
                   ✏️ Edit
                 </button>
                 <button 
                   className="delete-btn" 
                   onClick={() => deleteTask((task as any)._id)}
+                  style={{ 
+                    background: '#EF4444', 
+                    color: 'white', 
+                    border: 'none', 
+                    padding: '6px 12px', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
                 >
                   🗑️ Delete
                 </button>
@@ -392,60 +388,6 @@ const TasksPage: React.FC = () => {
             </div>
           </div>
         ))}
-      </div>
-
-      <div className="time-limit-section">
-        <h2>Time Limit</h2>
-        <div className="time-tasks-scroll">
-          {sortedTasks.map((task) => (
-            <div key={(task as any)._id} className="time-task-card">
-              <div className="time-task-image">
-                <div className="time-task-thumbnail">📱</div>
-              </div>
-              <div className="time-task-content">
-                <h4 className="time-task-title">{task.title}</h4>
-                <p className="time-task-category">{task.category}</p>
-
-                <div className="time-task-progress">
-                  <span className="progress-label">Progress</span>
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill" 
-                      style={{ width: `${task.progress || 0}%` }}
-                    ></div>
-                  </div>
-                  <span className="progress-percentage">{task.progress || 0}%</span>
-                </div>
-
-                <div className="time-task-estimate">
-                  <span className="estimate-icon">⏰</span>
-                  <span className="estimate-text">{task.estimated_time?.hours ?? 0} Hour</span>
-                </div>
-
-                <div className="time-task-assignees">
-                  {(task.assigned_to || []).map((userId, index) => (
-                    <div key={index} className="assignee-avatar">👤</div>
-                  ))}
-                </div>
-
-                <div className="task-actions">
-                  <button 
-                    className="edit-btn" 
-                    onClick={() => openEditModal(task)}
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button 
-                    className="delete-btn" 
-                    onClick={() => deleteTask((task as any)._id)}
-                  >
-                    🗑️ Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );
