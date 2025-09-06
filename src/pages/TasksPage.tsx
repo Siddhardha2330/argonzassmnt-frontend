@@ -68,14 +68,21 @@ const TasksPage: React.FC = () => {
     if (debouncedProgress > 0) {
       // This will be called 1 second after the user stops changing progress
       console.log('🔄 Debounced progress update:', debouncedProgress);
+      // Find the task that was being updated and update it via API
+      const taskToUpdate = tasks.find(t => (t as any).progress === debouncedProgress);
+      if (taskToUpdate) {
+        updateProgress((taskToUpdate as any)._id, debouncedProgress);
+      }
     }
   }, [debouncedProgress]);
 
   // Fix filtering logic
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = searchTerm === '' || 
+                         task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          task.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || task.category === selectedCategory;
+    console.log('🔍 Filtering task:', task.title, 'Search:', searchTerm, 'Category:', selectedCategory, 'Matches:', matchesSearch && matchesCategory);
     return matchesSearch && matchesCategory;
   });
 
@@ -349,9 +356,10 @@ const TasksPage: React.FC = () => {
                   value={task.progress || 0} 
                   onChange={(e) => {
                     const newProgress = Number(e.target.value);
-                    setProgressValue(newProgress);
                     // Update UI immediately for better UX
                     setTasks(prev => prev.map(t => (t as any)._id === (task as any)._id ? { ...t, progress: newProgress } as Task : t));
+                    // Set progress value for debounced API call
+                    setProgressValue(newProgress);
                   }} 
                 />
               </div>
@@ -367,34 +375,16 @@ const TasksPage: React.FC = () => {
                 ))}
               </div>
 
-              <div className="task-actions" style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+              <div className="task-actions">
                 <button 
                   className="edit-btn" 
                   onClick={() => openEditModal(task)}
-                  style={{ 
-                    background: '#3B82F6', 
-                    color: 'white', 
-                    border: 'none', 
-                    padding: '6px 12px', 
-                    borderRadius: '4px', 
-                    cursor: 'pointer',
-                    fontSize: '12px'
-                  }}
                 >
                   ✏️ Edit
                 </button>
                 <button 
                   className="delete-btn" 
                   onClick={() => deleteTask((task as any)._id)}
-                  style={{ 
-                    background: '#EF4444', 
-                    color: 'white', 
-                    border: 'none', 
-                    padding: '6px 12px', 
-                    borderRadius: '4px', 
-                    cursor: 'pointer',
-                    fontSize: '12px'
-                  }}
                 >
                   🗑️ Delete
                 </button>
@@ -436,6 +426,21 @@ const TasksPage: React.FC = () => {
                   {(task.assigned_to || []).map((userId, index) => (
                     <div key={index} className="assignee-avatar">👤</div>
                   ))}
+                </div>
+
+                <div className="task-actions">
+                  <button 
+                    className="edit-btn" 
+                    onClick={() => openEditModal(task)}
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button 
+                    className="delete-btn" 
+                    onClick={() => deleteTask((task as any)._id)}
+                  >
+                    🗑️ Delete
+                  </button>
                 </div>
               </div>
             </div>
