@@ -31,16 +31,7 @@ const App: React.FC = () => {
               <Routes>
                 <Route path="/" element={
                   <div className="overview-page">
-                    <h1>🚀 Overview Page</h1>
-                    <p>Welcome to the Task Management & Mentor System!</p>
-                    <p>Backend API: https://argonzassmnt-backend.onrender.com</p>
-                    <button onClick={() => {
-                      console.log('🔍 Testing API connection...');
-                      fetch('https://argonzassmnt-backend.onrender.com/api/health')
-                        .then(res => res.json())
-                        .then(data => console.log('✅ API Health:', data))
-                        .catch(err => console.error('❌ API Error:', err));
-                    }}>Test API Connection</button>
+                    <h1>Overview</h1>
                   </div>
                 } />
                 <Route path="/tasks" element={<TasksPage />} />
