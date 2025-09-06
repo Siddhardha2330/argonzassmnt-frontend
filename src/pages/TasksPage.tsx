@@ -77,25 +77,47 @@ const TasksPage: React.FC = () => {
   };
 
   async function updateProgress(taskId: string, progress: number) {
+    console.log(`📋 Updating task ${taskId} progress to ${progress}%`);
     try {
       const response = await apiService.updateTaskProgress(taskId, progress);
-      if (!response.error) {
-        setTasks(prev => prev.map(t => (t as any)._id === taskId ? { ...t, progress } as Task : t));
+      console.log('📋 Update progress response:', response);
+      
+      if (response.error) {
+        console.error('❌ Update progress failed:', response.error);
+        setError(response.error);
+        return;
       }
-    } catch {}
+      
+      console.log('✅ Task progress updated successfully');
+      setTasks(prev => prev.map(t => (t as any)._id === taskId ? { ...t, progress } as Task : t));
+      setError(null);
+    } catch (error) {
+      console.error('❌ Update progress error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update progress');
+    }
   }
 
   async function createTask() {
+    console.log('📋 Creating task with data:', newTask);
     try {
-      await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTask)
-      });
+      const response = await apiService.createTask(newTask);
+      console.log('📋 Create task response:', response);
+      
+      if (response.error) {
+        console.error('❌ Create task failed:', response.error);
+        setError(response.error);
+        return;
+      }
+      
+      console.log('✅ Task created successfully');
       setNewTask({ title: '', description: '', category: '', priority: 'medium', deadline: '' });
       setShowAddModal(false);
-      fetchTasks();
-    } catch {}
+      setError(null);
+      await fetchTasks();
+    } catch (error) {
+      console.error('❌ Create task error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create task');
+    }
   }
 
   return (
@@ -174,8 +196,8 @@ const TasksPage: React.FC = () => {
         </div>
       )}
 
-      {error && <div style={{ color: 'red' }}>{error}</div>}
       {loading && <div>Loading tasks...</div>}
+      {error && <div className="error-message" style={{ color: 'red', padding: '10px', margin: '10px 0', backgroundColor: '#ffe6e6', border: '1px solid #ff9999', borderRadius: '4px' }}>Error: {error}</div>}
 
       <div className="tasks-grid">
         {sortedTasks.map((task) => (

@@ -73,12 +73,26 @@ const MentorsPage: React.FC = () => {
   const [newMentor, setNewMentor] = useState({ profession: '', specialization: '', bio: '' });
   const [showAddModal, setShowAddModal] = useState(false);
   async function createMentor() {
+    console.log('👥 Creating mentor with data:', newMentor);
     try {
-      await fetch('/api/mentors', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newMentor) });
+      const response = await apiService.createMentor(newMentor);
+      console.log('👥 Create mentor response:', response);
+      
+      if (response.error) {
+        console.error('❌ Create mentor failed:', response.error);
+        setError(response.error);
+        return;
+      }
+      
+      console.log('✅ Mentor created successfully');
       setNewMentor({ profession: '', specialization: '', bio: '' });
       setShowAddModal(false);
-      fetchMentors();
-    } catch {}
+      setError(null);
+      await fetchMentors();
+    } catch (error) {
+      console.error('❌ Create mentor error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create mentor');
+    }
   }
 
   const sortedMentors = [...filteredMentors].sort((a, b) => {
@@ -93,12 +107,24 @@ const MentorsPage: React.FC = () => {
   });
 
   async function followMentor(id: string) {
+    console.log(`👥 Following mentor ${id}`);
     try {
       const response = await apiService.followMentor(id);
-      if (!response.error) {
-        setMentors(prev => prev.map(m => m._id === id ? { ...m, total_followers: ((m.total_followers || 0) + 1) } : m));
+      console.log('👥 Follow mentor response:', response);
+      
+      if (response.error) {
+        console.error('❌ Follow mentor failed:', response.error);
+        setError(response.error);
+        return;
       }
-    } catch {}
+      
+      console.log('✅ Mentor followed successfully');
+      setMentors(prev => prev.map(m => m._id === id ? { ...m, total_followers: ((m.total_followers || 0) + 1) } : m));
+      setError(null);
+    } catch (error) {
+      console.error('❌ Follow mentor error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to follow mentor');
+    }
   }
 
   return (
@@ -131,8 +157,8 @@ const MentorsPage: React.FC = () => {
         </div>
       </div>
 
-      {error && <div style={{ color: 'red' }}>{error}</div>}
       {loading && <div>Loading mentors...</div>}
+      {error && <div className="error-message" style={{ color: 'red', padding: '10px', margin: '10px 0', backgroundColor: '#ffe6e6', border: '1px solid #ff9999', borderRadius: '4px' }}>Error: {error}</div>}
 
       <div className="page-actions" style={{ margin: '12px 0' }}>
         <button className="primary-btn" onClick={() => setShowAddModal(true)}>+ Add Mentor</button>
