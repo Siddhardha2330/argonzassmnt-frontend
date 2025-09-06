@@ -182,7 +182,7 @@ const TasksPage: React.FC = () => {
       description: task.description,
       category: task.category,
       priority: (task as any).priority || 'medium',
-      deadline: task.deadline ? (typeof task.deadline === 'string' ? task.deadline.split('T')[0] : new Date(task.deadline).toISOString().split('T')[0]) : ''
+      deadline: task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : ''
     });
     setShowEditModal(true);
   }
