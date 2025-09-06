@@ -74,7 +74,7 @@ const MentorsPage: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMentor, setEditingMentor] = useState<MentorProfile | null>(null);
-  const [editMentor, setEditMentor] = useState({ profession: '', specialization: '', bio: '' });
+  const [editMentorData, setEditMentorData] = useState({ profession: '', specialization: '', bio: '' });
   async function createMentor() {
     console.log('👥 Creating mentor with data:', newMentor);
     try {
@@ -130,12 +130,12 @@ const MentorsPage: React.FC = () => {
     }
   }
 
-  async function editMentor() {
+  async function updateMentor() {
     if (!editingMentor) return;
     
-    console.log('📝 Editing mentor with data:', editMentor);
+    console.log('📝 Editing mentor with data:', editMentorData);
     try {
-      const response = await apiService.updateMentor(editingMentor._id, editMentor);
+      const response = await apiService.updateMentor(editingMentor._id, editMentorData);
       console.log('📝 Edit mentor response:', response);
       
       if (response.error) {
@@ -145,7 +145,7 @@ const MentorsPage: React.FC = () => {
       }
       
       console.log('✅ Mentor edited successfully');
-      setEditMentor({ profession: '', specialization: '', bio: '' });
+      setEditMentorData({ profession: '', specialization: '', bio: '' });
       setEditingMentor(null);
       setShowEditModal(false);
       setError(null);
@@ -181,7 +181,7 @@ const MentorsPage: React.FC = () => {
 
   function openEditModal(mentor: MentorProfile) {
     setEditingMentor(mentor);
-    setEditMentor({
+    setEditMentorData({
       profession: mentor.profession,
       specialization: mentor.specialization,
       bio: mentor.bio
@@ -256,19 +256,19 @@ const MentorsPage: React.FC = () => {
             <h3>Edit Mentor</h3>
             <div className="form-field">
               <label htmlFor="edit-mentor-profession">Profession</label>
-              <input id="edit-mentor-profession" placeholder="Profession" value={editMentor.profession} onChange={e => setEditMentor({ ...editMentor, profession: e.target.value })} />
+              <input id="edit-mentor-profession" placeholder="Profession" value={editMentorData.profession} onChange={e => setEditMentorData({ ...editMentorData, profession: e.target.value })} />
             </div>
             <div className="form-field">
               <label htmlFor="edit-mentor-spec">Specialization</label>
-              <input id="edit-mentor-spec" placeholder="Specialization" value={editMentor.specialization} onChange={e => setEditMentor({ ...editMentor, specialization: e.target.value })} />
+              <input id="edit-mentor-spec" placeholder="Specialization" value={editMentorData.specialization} onChange={e => setEditMentorData({ ...editMentorData, specialization: e.target.value })} />
             </div>
             <div className="form-field">
               <label htmlFor="edit-mentor-bio">Bio</label>
-              <input id="edit-mentor-bio" placeholder="Brief bio" value={editMentor.bio} onChange={e => setEditMentor({ ...editMentor, bio: e.target.value })} />
+              <input id="edit-mentor-bio" placeholder="Brief bio" value={editMentorData.bio} onChange={e => setEditMentorData({ ...editMentorData, bio: e.target.value })} />
             </div>
             <div className="modal-actions">
               <button className="secondary-btn" onClick={() => setShowEditModal(false)}>Cancel</button>
-              <button className="primary-btn" disabled={!editMentor.profession} onClick={editMentor}>Update</button>
+              <button className="primary-btn" disabled={!editMentorData.profession} onClick={updateMentor}>Update</button>
             </div>
           </div>
         </div>

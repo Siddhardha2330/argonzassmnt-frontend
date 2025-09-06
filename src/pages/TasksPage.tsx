@@ -17,7 +17,7 @@ const TasksPage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [newTask, setNewTask] = useState({ title: '', description: '', category: '', priority: 'medium', deadline: '' });
-  const [editTask, setEditTask] = useState({ title: '', description: '', category: '', priority: 'medium', deadline: '' });
+  const [editTaskData, setEditTaskData] = useState({ title: '', description: '', category: '', priority: 'medium', deadline: '' });
 
   async function fetchCategories() {
     try {
@@ -126,12 +126,12 @@ const TasksPage: React.FC = () => {
     }
   }
 
-  async function editTask() {
+  async function updateTask() {
     if (!editingTask) return;
     
-    console.log('📝 Editing task with data:', editTask);
+    console.log('📝 Editing task with data:', editTaskData);
     try {
-      const response = await apiService.updateTask(editingTask._id, editTask);
+      const response = await apiService.updateTask(editingTask._id, editTaskData);
       console.log('📝 Edit task response:', response);
       
       if (response.error) {
@@ -141,7 +141,7 @@ const TasksPage: React.FC = () => {
       }
       
       console.log('✅ Task edited successfully');
-      setEditTask({ title: '', description: '', category: '', priority: 'medium', deadline: '' });
+      setEditTaskData({ title: '', description: '', category: '', priority: 'medium', deadline: '' });
       setEditingTask(null);
       setShowEditModal(false);
       setError(null);
@@ -177,12 +177,12 @@ const TasksPage: React.FC = () => {
 
   function openEditModal(task: Task) {
     setEditingTask(task);
-    setEditTask({
+    setEditTaskData({
       title: task.title,
       description: task.description,
       category: task.category,
       priority: (task as any).priority || 'medium',
-      deadline: task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : ''
+      deadline: task.deadline ? (typeof task.deadline === 'string' ? task.deadline.split('T')[0] : new Date(task.deadline).toISOString().split('T')[0]) : ''
     });
     setShowEditModal(true);
   }
@@ -268,23 +268,23 @@ const TasksPage: React.FC = () => {
             <h3>Edit Task</h3>
             <div className="form-field">
               <label htmlFor="edit-task-title">Title</label>
-              <input id="edit-task-title" placeholder="Task title" value={editTask.title} onChange={e => setEditTask({ ...editTask, title: e.target.value })} />
+              <input id="edit-task-title" placeholder="Task title" value={editTaskData.title} onChange={e => setEditTaskData({ ...editTaskData, title: e.target.value })} />
             </div>
             <div className="form-field">
               <label htmlFor="edit-task-desc">Description</label>
-              <input id="edit-task-desc" placeholder="Short description" value={editTask.description} onChange={e => setEditTask({ ...editTask, description: e.target.value })} />
+              <input id="edit-task-desc" placeholder="Short description" value={editTaskData.description} onChange={e => setEditTaskData({ ...editTaskData, description: e.target.value })} />
             </div>
             <div className="form-row">
               <div className="form-field">
                 <label htmlFor="edit-task-cat">Category</label>
-                <select id="edit-task-cat" value={editTask.category} onChange={e => setEditTask({ ...editTask, category: e.target.value })}>
+                <select id="edit-task-cat" value={editTaskData.category} onChange={e => setEditTaskData({ ...editTaskData, category: e.target.value })}>
                   <option value="">Select category</option>
                   {categories.map(c => <option key={(c as any)._id || c.name} value={c.name}>{c.name}</option>)}
                 </select>
               </div>
               <div className="form-field">
                 <label htmlFor="edit-task-priority">Priority</label>
-                <select id="edit-task-priority" value={editTask.priority} onChange={e => setEditTask({ ...editTask, priority: e.target.value })}>
+                <select id="edit-task-priority" value={editTaskData.priority} onChange={e => setEditTaskData({ ...editTaskData, priority: e.target.value })}>
                   <option value="low">low</option>
                   <option value="medium">medium</option>
                   <option value="high">high</option>
@@ -293,11 +293,11 @@ const TasksPage: React.FC = () => {
             </div>
             <div className="form-field">
               <label htmlFor="edit-task-deadline">Deadline</label>
-              <input id="edit-task-deadline" type="date" value={editTask.deadline} onChange={e => setEditTask({ ...editTask, deadline: e.target.value })} />
+              <input id="edit-task-deadline" type="date" value={editTaskData.deadline} onChange={e => setEditTaskData({ ...editTaskData, deadline: e.target.value })} />
             </div>
             <div className="modal-actions">
               <button className="secondary-btn" onClick={() => setShowEditModal(false)}>Cancel</button>
-              <button className="primary-btn" disabled={!editTask.title || !editTask.description} onClick={editTask}>Update</button>
+              <button className="primary-btn" disabled={!editTaskData.title || !editTaskData.description} onClick={updateTask}>Update</button>
             </div>
           </div>
         </div>
