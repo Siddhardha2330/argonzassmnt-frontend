@@ -4,6 +4,8 @@ import { apiService } from '../services/api';
 import '../styles/MentorsPage.css';
 
 const MentorsPage: React.FC = () => {
+  console.log('👥 MentorsPage component rendering...');
+  
   const [mentors, setMentors] = useState<MentorProfile[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');

@@ -4,6 +4,8 @@ import { apiService } from '../services/api';
 import '../styles/TasksPage.css';
 
 const TasksPage: React.FC = () => {
+  console.log('📋 TasksPage component rendering...');
+  
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');

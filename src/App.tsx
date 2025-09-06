@@ -6,6 +6,8 @@ import TasksPage from './pages/TasksPage';
 import './styles/App.css';
 
 const App: React.FC = () => {
+  console.log('🚀 App component rendering...');
+  
   return (
           <div className="App">
             <nav className="navbar">
@@ -27,7 +29,20 @@ const App: React.FC = () => {
 
             <div className="main-content">
               <Routes>
-                <Route path="/" element={<div className="overview-page">Overview Page</div>} />
+                <Route path="/" element={
+                  <div className="overview-page">
+                    <h1>🚀 Overview Page</h1>
+                    <p>Welcome to the Task Management & Mentor System!</p>
+                    <p>Backend API: https://argonzassmnt-backend.onrender.com</p>
+                    <button onClick={() => {
+                      console.log('🔍 Testing API connection...');
+                      fetch('https://argonzassmnt-backend.onrender.com/api/health')
+                        .then(res => res.json())
+                        .then(data => console.log('✅ API Health:', data))
+                        .catch(err => console.error('❌ API Error:', err));
+                    }}>Test API Connection</button>
+                  </div>
+                } />
                 <Route path="/tasks" element={<TasksPage />} />
                 <Route path="/mentors" element={<MentorsPage />} />
                 <Route path="/messages" element={<div className="messages-page">Messages Page</div>} />

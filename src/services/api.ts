@@ -20,6 +20,8 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseUrl}${endpoint}`;
+      console.log(`🌐 Making API request to: ${url}`);
+      
       const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json',
@@ -28,14 +30,17 @@ class ApiService {
         ...options,
       });
 
+      console.log(`📡 API response status: ${response.status}`);
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log(`✅ API response data:`, data);
       return { data };
     } catch (error) {
-      console.error('API request failed:', error);
+      console.error('❌ API request failed:', error);
       return { 
         error: error instanceof Error ? error.message : 'Unknown error occurred' 
       };
