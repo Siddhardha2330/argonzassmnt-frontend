@@ -12,6 +12,7 @@ class ApiService {
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl;
+    console.log('🔧 ApiService initialized with baseUrl:', this.baseUrl);
   }
 
   private async request<T>(

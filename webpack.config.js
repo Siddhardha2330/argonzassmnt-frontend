@@ -45,7 +45,7 @@ module.exports = (env, argv) => {
       port: 3000,
       hot: true,
       open: true,
-      proxy: {
+      proxy: isProduction ? {} : {
         '/api': 'http://localhost:4000'
       }
     }
